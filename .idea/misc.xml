@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="hierarchical-marl" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="hmarl" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="hmarl_cpp" project-jdk-type="Python SDK" />
 </project>
