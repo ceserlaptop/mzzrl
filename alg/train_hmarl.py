@@ -116,11 +116,12 @@ def train_function(arg):
         high_agents.policy.init_hidden(1)  # 初始化隐藏层状态，（1）表示是第一场
         o, u, r, s, avail_u, u_onehot, terminate, padded = [], [], [], [], [], [], [], []  # 记录轨迹
         idx_step_h = 0
-
+        actions_h, actions_h_onehot, avail_actions_h = None, None, None
         # 开始训练步数循环
         while not done:
             # 初始化内在奖励
             reward_intrinsic = np.zeros(conf.n_agents)  # ndarray: [0.0  0.0  0.0  0.0]
+
             # --------------------------------------------------------------------------------------------------
             # 如果到达选择技能的步数.这里可以理解为上层策略的一个"step"
             # --------------------------------------------------------------------------------------------------
@@ -165,7 +166,7 @@ def train_function(arg):
                         done_h = True
 
                     o.append(obs_n_h_t)  # 观测
-                    s.append(state_t)  # todo 环境的状态，不区分智能体，因为状态只有一个，这里后面要换成真实的环境状态
+                    s.append(state_t)  #
                     # 每个时间步各个智能体的动作【[[[1], [0], [1], [1]], [[1], [0], [1], [1]], .......]】
                     u.append(np.reshape(actions_h, [conf.n_agents, 1]))
                     u_onehot.append(actions_h_onehot)  # 变成热编码 【[[[0, 1], [1 ,0], [0, 1], [0, 1]], [[0, 1], [1 ,0],

@@ -3,10 +3,6 @@ import os
 from alg.qmix.networks import RNN, QMixNet
 
 
-# import sys
-# sys.setrecursionlimit(100000) #例如这里设置为十万
-
-
 class QMIX:
     def __init__(self, conf):
         self.conf = conf
@@ -176,8 +172,8 @@ class QMIX:
         return inputs, inputs_
 
     def init_hidden(self, episode_num):  # episode_num表示当前是第几场
-        self.eval_hidden = torch.zeros((episode_num, self.n_agents, self.conf.rnn_hidden_dim))
-        self.target_hidden = torch.zeros((episode_num, self.n_agents, self.conf.rnn_hidden_dim))
+        self.eval_hidden = torch.zeros((episode_num, self.n_agents, self.conf.rnn_hidden_dim)).to(self.device)
+        self.target_hidden = torch.zeros((episode_num, self.n_agents, self.conf.rnn_hidden_dim)).to(self.device)
 
     def save_model(self, train_step):
         num = str(train_step // self.conf.save_frequency)
