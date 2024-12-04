@@ -13,7 +13,7 @@ import env.cpp_env.scenarios as scenarios
 from env.cpp_env.environment import MultiAgentEnv
 # 导入外部工作函数
 from utils import create_dir
-from evaluate import evaluate
+# from evaluate import evaluate
 # 导入网络
 from alg.qmix.agent import Agents as qmix_agents
 from maddpg.agent import agents as maddpg_agents
@@ -72,8 +72,9 @@ def train_function(arg):
     buf_low = low_buffer(arg.buffer_size)
 
     # 初始化训练参数
-    avail_action_h = conf.avail_action
+
     epsilon = conf.epsilon_start
+    epsilon_end = conf.epsilon_end
     epsilon_step = conf.epsilon_step
 
     obs_size = []
@@ -116,7 +117,7 @@ def train_function(arg):
         high_agents.policy.init_hidden(1)  # 初始化隐藏层状态，（1）表示是第一场
         o, u, r, s, avail_u, u_onehot, terminate, padded = [], [], [], [], [], [], [], []  # 记录轨迹
         idx_step_h = 0
-        actions_h, actions_h_onehot, avail_actions_h = None, None, None
+        actions_h, actions_h_onehot, avail_actions_h = None, None, conf.avail_action
         # 开始训练步数循环
         while not done:
             # 初始化内在奖励
@@ -348,7 +349,8 @@ def train_function(arg):
                                end_time - start_time
                                ))
             print(output)
-
+        if idx_episode >= conf.pretrain_episodes and epsilon > epsilon_end:
+            epsilon -= epsilon_step
         # if idx_episode % arg.evaluate_episode_fre == 0:
         #     # 进行评估，得到平均奖励，每集平均步长，胜率，对手胜率
         #     test_cov, test_rew, test_col, test_out, test_done = evaluate(env, arg, alg)
