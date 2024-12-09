@@ -15,7 +15,7 @@ class Config:
         self.evaluate_per_epoch = 100  # 100
         self.batch_size = 4  # 32
         self.buffer_size = int(1e2)
-        self.save_frequency = 10  # 训练多少次保存一次
+        self.save_frequency = 1000  # 训练多少次保存一次
         self.train_steps = 10  # 每次训练多少轮
         self.train_frequency = 5  # 多少场训练一次,上层训练频率
         self.episode_limit = 100  # 每个episode的最大步数，max_step

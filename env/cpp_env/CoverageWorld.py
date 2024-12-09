@@ -211,17 +211,15 @@ class CoverageWorld(World):
                             grid.done = True
                             poi.just = True
                     self.get_field_data.append([poi.name, poi.field_really])  # 加入智能体观测到的真实数据的列表
-                    print("已采集数据", self.get_field_data)
                     num_done += 1
                 poi.color = np.array([0.25 + poi.energy / poi.m_energy * 0.75, 0.25, 0.25])
         self.coverage_rate = num_done / len(self.landmarks)
 
     def field_change(self, mode):
-        file_path = "gradual_elliptical_field_strength.csv"  # 场强数据文件路径
-        data_path = "gradual_elliptical_field_strength.csv"
+        data_path = "gradual_elliptical_field_strength.csv"  # 场强数据文件路径
         data = pd.read_csv(data_path)
         data_values = data.values.reshape(100)
-        rgb_data = get_rgb(file_path)  # 读取并转为 NumPy 数组
+        rgb_data = get_rgb(data_path)  # 读取并转为 NumPy 数组
         i = 0
         for field in self.field_strength:
             field.field_data = data_values[i]
