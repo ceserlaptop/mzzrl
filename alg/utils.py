@@ -135,6 +135,61 @@ def get_rgb(file_path):
     return rgb_data.reshape(-1, 3)
 
 
+def choose_point(agent, world_field_strength):
+    min_distence = [[[None, np.inf], [None, np.inf]], [[None, np.inf], [None, np.inf]], [[None, np.inf], [None, np.inf]], [[None, np.inf], [None, np.inf]]]
+    for field in world_field_strength:
+        distence = calculate_distance(field.state.p_pos, agent.state.p_pos)
+        angel = calculate_angle(field.state.p_pos, agent.state.p_pos)
+        index = (angel-(np.pi/4))/(np.pi/2)
+        if index < 0:
+            if distence < min_distence[3][0][1]:
+                min_distence[3][0][0] = field
+                min_distence[3][0][1] = distence
+            elif distence < min_distence[3][1][1]:
+                min_distence[3][1][0] = field
+                min_distence[3][1][1] = distence
+            else:
+                pass
+        else:
+            index = int(index)
+            if distence < min_distence[index][0][1]:
+                min_distence[index][0][0] = field
+                min_distence[index][0][1] = distence
+            elif distence < min_distence[index][1][1]:
+                min_distence[index][1][0] = field
+                min_distence[index][1][1] = distence
+            else:
+                pass
+    return min_distence
+
+
+def calculate_distance(point1, point2):
+    return math.sqrt((point2[0] - point1[0]) ** 2 + (point2[1] - point1[1]) ** 2)
+
+
+# 从point1指向point2的弧度制角度
+def calculate_angle(point1, point2):
+    # 计算 y 和 x 的差值
+    delta_y = point2[1] - point1[1]
+    delta_x = point2[0] - point1[0]
+    # 使用 atan2 计算角度（弧度）
+    angle_radians = math.atan2(delta_y, delta_x)
+    # 确保弧度为非负值（0 到 2π）
+    angle_radians = angle_radians % (2 * math.pi)
+    return angle_radians
+
+
+def calculate_pos(env_size, scope):
+    border_distance = scope/env_size
+    x = np.arange(-scope+border_distance, scope, 2*border_distance)
+    y = np.arange(-scope+border_distance, scope, 2*border_distance)
+    X, Y = np.meshgrid(x, y)
+    x = X.reshape(env_size*env_size, )
+    y = Y.reshape(env_size*env_size, )
+    pos_pois = np.array([x, y])
+    return pos_pois
+
+
 def create_dir(scenario_name):
     """构造目录 ./scenario_name/experiment_name/(plots, policy, buffer)"""
     scenario_path = "./" + scenario_name

@@ -99,29 +99,33 @@ class MultiAgentEnv(gym.Env):
                     ag.target_id = i
             centers[ag.target_id] = [10, 10]  # 将已经选择的区域中心置远，避免重复选择
 
-    def step(self, action_n):
+    def step(self, action_input):
         # # todo 这里只用来调试，后期需要去掉
         # action_n = [np.array([13719068, 0.02047865, 0.7962253, 0.03812775, 0.00797753]),
         #            np.array([0.07508944, 0.7004558, 0.04798195, 0.01469667, 0.16177621]),
         #            np.array([0.0214441, 0.748268, 0.10931759, 0.01024642, 0.11072386]),
         #            np.array([0.03743383, 0.2150916, 0.6732575, 0.04681827, 0.02739876]), ]
-        if self.stepnum % 40 == 0:
-            self.area_partition()
-        self.stepnum += 1
+        action_n = [arr[:5] for arr in action_input]
+        action_h = [arr[5:] for arr in action_input]
         obs_n = []
-        reward_n = []
-        # done_n = []
         self.agents = self.world.policy_agents
+
         # set action for each agent
         for i, agent in enumerate(self.agents):
             self._set_action(action_n[i], agent, self.action_space[i])
+
         # advance world state
         self.world.step(action_n)
+
         # record observation for each agent
         for agent in self.agents:
             obs_n.append(self._get_obs(agent))
-            # reward_n.append(self._get_reward(agent))
-        reward_n = [self._get_reward(self.agents[0]) * self.n] * self.n
+        reward_n = []
+        for i in range(len(self.agents)):
+            reward_agent = self._get_reward(self.agents[i], action_h[i])
+            reward_n.append(reward_agent)
+        print("一步奖励为：", reward_n)
+        # reward_n = [self._get_reward(self.agents[0]) * self.n] * self.n
         done_n = [self._get_done(self.agents[0])] * self.n
         self.isrest = False
 
@@ -191,10 +195,10 @@ class MultiAgentEnv(gym.Env):
         return self.done_callback(agent, self.world)
 
     # get reward for a particular agent
-    def _get_reward(self, agent):
+    def _get_reward(self, agent, action_h):
         if self.reward_callback is None:
             return 0.0
-        return self.reward_callback(agent, self.world, self.isrest)
+        return self.reward_callback(agent, self.world, action_h)
 
     # set env action for a particular agent
     def _set_action(self, action, agent, action_space, time=None):

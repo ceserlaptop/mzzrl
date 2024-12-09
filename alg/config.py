@@ -51,7 +51,7 @@ class Config:
         # model structure
         self.n_actions = 2
         self.n_agents = 4
-        self.obs_shape = 314
+        self.obs_shape = 114
         self.state_shape = self.obs_shape * self.n_agents
         self.avail_action = [1] * self.n_actions
 

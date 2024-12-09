@@ -61,16 +61,23 @@ class Entity(object):
         return self.initial_mass
 
 
+class Grid(Entity):
+    def __init__(self):
+        super(Grid, self).__init__()
+
+
 class Field_strength(Entity):
     def __init__(self):
         super(Field_strength, self).__init__()
         self.view_vertices = None
+        self.field_data = 0
 
 
 # properties of landmark entities
 class Landmark(Entity):
     def __init__(self):
         super(Landmark, self).__init__()
+        self.field_really = None
 
 
 # properties of agent entities
@@ -95,6 +102,7 @@ class Agent(Entity):
         self.action = Action()
         # script behavior to execute
         self.action_callback = None
+        self.get_field = []
 
 
 # multi-agent world
@@ -104,6 +112,7 @@ class World(object):
         self.agents = []
         self.landmarks = []
         self.field_strength = []
+        self.grid = []
         # self.done_poi = []  # 用来存储已经完成覆盖的目标点
         # communication channel dimensionality
         self.dim_c = 0
@@ -136,7 +145,7 @@ class World(object):
         return [agent for agent in self.agents if agent.action_callback is not None]
 
     # update state of the world
-    def step(self):
+    def step(self, action):
         # set actions for scripted agents 
         for agent in self.scripted_agents:
             agent.action = agent.action_callback(agent, self)

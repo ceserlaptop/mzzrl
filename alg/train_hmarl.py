@@ -72,7 +72,6 @@ def train_function(arg):
     buf_low = low_buffer(arg.buffer_size)
 
     # 初始化训练参数
-
     epsilon = conf.epsilon_start
     epsilon_end = conf.epsilon_end
     epsilon_step = conf.epsilon_step
@@ -203,7 +202,11 @@ def train_function(arg):
                 action_n_l = [agent(torch.from_numpy(obs).to(arg.device, torch.float)).detach().cpu().numpy()
                               for agent, obs in zip(low_agents.actors_cur, obs_n_l)]
             # 基于环境得到下一时刻的观测，以及全局奖励，终止标志等。
-            obs_n_t, rew_n, done_n = env.step(action_n_l)
+            action_input = []
+            for i in range(len(action_n_l)):
+                action_input.append(np.append(action_n_l[i], actions_h[i]))
+
+            obs_n_t, rew_n, done_n = env.step(action_input)
             if idx_episode % arg.render_fra == 0 and idx_step % arg.render_step_fra:
                 env.render()
 
@@ -351,23 +354,6 @@ def train_function(arg):
             print(output)
         if idx_episode >= conf.pretrain_episodes and epsilon > epsilon_end:
             epsilon -= epsilon_step
-        # if idx_episode % arg.evaluate_episode_fre == 0:
-        #     # 进行评估，得到平均奖励，每集平均步长，胜率，对手胜率
-        #     test_cov, test_rew, test_col, test_out, test_done = evaluate(env, arg, alg)
-        #     test_coverage.append((np.mean(test_cov)))
-        #     test_reward.append(np.mean(test_rew))
-        #     test_collision.append(np.mean(test_col))
-        #     test_outRange.append(np.mean(test_out))
-        #     test_done_steps.append(np.mean(test_done))
-
-        # # 如果覆盖率大于保存的阈值，则保存策略
-        # if np.mean(coverage_rate) >= arg.save_cov_rate_threshold:
-        #     time_now = time.strftime('%m%d_%H%M%S')
-        #     print('=time:{} episode:{} step:{}        save'.format(time_now, idx_episode + 1, idx_step))
-        #     model_file_dir = os.path.join(save_policy_path, '{}_{}_{}'.format(
-        #         arg.scenario_name, time_now, (idx_episode + 1)))
-        #     if not os.path.exists(model_file_dir):  # make the path
-        #         os.mkdir(model_file_dir)
 
         if idx_episode > 0 and idx_episode % arg.fre_save_model == 0:  # 如果到了保存间隔，不论胜率是否达标都保存
             time_now = time.strftime('%m%d_%H%M%S')

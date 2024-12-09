@@ -19,7 +19,7 @@ def parse_args():
     parser.add_argument("--max_step", type=int, default=160, help="maximum episode length")
     parser.add_argument("--max_episode", type=int, default=10000, help="maximum episode length")
     parser.add_argument("--num-adversaries", type=int, default=0, help="number of adversaries")
-    parser.add_argument("--field_mode", type=str, default="gradual", help="场强信息的显示形式，static为静态，gradual为动态")
+    parser.add_argument("--field_mode", type=str, default="static", help="场强信息的显示形式，static为静态，gradual为动态")
     parser.add_argument("--n_agent", type=int, default=4, help="智能体数量")
     parser.add_argument("--n_skill", type=int, default=2, help="上层技巧的数量")
     parser.add_argument("--n_obs", type=int, default=134, help="观测数据的维度")

@@ -28,6 +28,7 @@ class CoverageWorld(World):
         self.obst_pos = []
         self.obst_pos.append(np.array([0.1, 0.5, 0.1, 0.5]))
         self.arglist = None
+        self.get_field_data = []
 
     def revise_action(self, action_n):
         action_r = np.zeros_like(action_n)
@@ -65,18 +66,10 @@ class CoverageWorld(World):
             p_velx.append(vel)
         p_force = [None for _ in range(len(self.agents))]
         p_force = self.apply_action_force(p_force)
-        # tmp_pos = self.check_state(p_force)
-        # CBF
-        tmp_pos = [ag.state.p_pos * 1 for ag in self.agents]
-        p_force = self.apply_coll_force(tmp_pos, action_n, p_velx, self.obst_pos, p_force)
 
-        # p_force = self.apply_coll_force(tmp_pos, self.obst_pos, p_force)
-        # p_force = self.apply_outrange_force(tmp_pos, p_force)
-
-        self.integrate_state(p_force)
-
-        self.update_energy()
-        self.field_change(self.arglist.field_mode)
+        self.integrate_state(p_force)  # 更新状态
+        self.update_energy()  # 更新能量
+        self.field_change(self.arglist.field_mode)  # 更新估计的场强
 
     def update_connect(self):
         # 更新邻接矩阵adj_mat和adj_mat_, adj对角线为0, dist对角线为1e5
@@ -152,7 +145,8 @@ class CoverageWorld(World):
 
     def integrate_state(self, p_force):
         for i, entity in enumerate(self.agents):
-            if not entity.movable: continue
+            if not entity.movable:
+                continue
             entity.state.p_vel = entity.state.p_vel * (1 - self.damping)
             if p_force[i] is not None:
                 entity.state.p_vel += (p_force[i] / entity.mass) * self.dt
@@ -207,29 +201,39 @@ class CoverageWorld(World):
                     if dist <= agent.r_cover:
                         # poi.energy += (1 - dist / agent.r_cover)  # power随半径线性减少
                         poi.energy += 1
+                        agent.get_field.append(poi.field_really)
                 if poi.energy >= poi.m_energy:
                     # self.done_poi.append(poi)
                     poi.done = True
                     poi.just = True
+                    for grid in self.grid:
+                        if (not grid.done) and (poi in grid.sub_points):
+                            grid.done = True
+                            poi.just = True
+                    self.get_field_data.append([poi.name, poi.field_really])  # 加入智能体观测到的真实数据的列表
+                    print("已采集数据", self.get_field_data)
                     num_done += 1
-                    # poi.color = np.array([0.25, 1.0, 0.25])
-                    # poi.color = np.array([1, 0, 0])
                 poi.color = np.array([0.25 + poi.energy / poi.m_energy * 0.75, 0.25, 0.25])
-                # poi.color = np.array([0.25 + poi.energy / poi.m_energy * 0.75, 0.25, 0.25])
         self.coverage_rate = num_done / len(self.landmarks)
 
     def field_change(self, mode):
-        file_path = "gradual_elliptical_field_strength.csv"  # RGB数据文件路径
+        file_path = "gradual_elliptical_field_strength.csv"  # 场强数据文件路径
+        data_path = "gradual_elliptical_field_strength.csv"
+        data = pd.read_csv(data_path)
+        data_values = data.values.reshape(100)
         rgb_data = get_rgb(file_path)  # 读取并转为 NumPy 数组
+        i = 0
         for field in self.field_strength:
-            field_name_num = (field.name.split("_")[-1])
+            field.field_data = data_values[i]
+            field_name_num = (field.name.split("_")[-1])  # 这里得到的是字符串型的数据
             if mode == "static":
                 # 全局不变
                 poi_field = None
                 # 取出对应的poi
                 for poi in self.landmarks:
-                    if poi.name == "poi_"+(field.name.split("_")[-1]):
+                    if poi.name == "poi_" + (field.name.split("_")[-1]):
                         poi_field = poi
+                # 判断对应的点是否完成覆盖
                 if poi_field.done:
                     field.color = rgb_data[int(field_name_num)]
                 else:
@@ -239,6 +243,7 @@ class CoverageWorld(World):
                 field.color = rgb_data[int(field_name_num)]
             else:
                 print("场强显示模式错误")
+            i += 1
 
     def apply_outrange_force(self, tmp_pos, p_force):
         # 判断是否出界, 并施加拉力
@@ -280,7 +285,7 @@ class CoverageWorld(World):
         cons = ({'type': 'ineq',
                  # 'fun': lambda x: m / ddt * (alfa * (U_b - py - vy * ddt) - vy) - m * (1 - yita) * vy - x[0] + x[1]})
                  'fun': lambda x: - vy - (1 - yita) * vy * ddt - ddt / m * (x[0] - x[1]) + alfa * (
-                             U_b - py - vy * ddt)})
+                         U_b - py - vy * ddt)})
         return cons
 
     def con_down(self, args):
@@ -302,7 +307,7 @@ class CoverageWorld(World):
         cons = ({'type': 'ineq',
                  # 'fun': lambda x: m / ddt * (alfa * (R_b - px - vx * ddt) - vx) - m * (1 - yita) * vx - x[2] + x[3]})
                  'fun': lambda x: - vx - (1 - yita) * vx * ddt - ddt / m * (x[2] - x[3]) + alfa * (
-                             R_b - px - vx * ddt)})
+                         R_b - px - vx * ddt)})
         return cons
 
     def con(self, args):
@@ -311,11 +316,11 @@ class CoverageWorld(World):
         #          'fun': lambda x: ((px - p0x) * vx + (py - p0y) * vy) / (((px - p0x) ** 2 + (py - p0y) ** 2) ** 0.5) + (1 - yita) * (vx + vy) * ddt + alfa * (((px - p0x) ** 2 + (py - p0y) ** 2) ** 0.5 + vx * ddt + vy * ddt - r0) + ddt / m * (x[2] - x[3] + x[0] - x[1])})
         cons = ({'type': 'ineq',
                  'fun': lambda x: (vx * (px + vx * ddt - p0x) + vy * (py + vy * ddt - p0y) + (
-                             (1 - yita) * vx + 1 / m * (x[2] - x[3])) * ddt * (px + vx * ddt - p0x) + (
-                                               (1 - yita) * vy + 1 / m * (x[0] - x[1])) * ddt * (
-                                               py + vy * ddt - p0y)) / (((px + vx * ddt - p0x) ** 2 + (
-                             py + vy * ddt - p0y) ** 2) ** 0.5) + alfa * (
-                                              ((px + vx * ddt - p0x) ** 2 + (py + vy * ddt - p0y) ** 2) ** 0.5 - r0)})
+                         (1 - yita) * vx + 1 / m * (x[2] - x[3])) * ddt * (px + vx * ddt - p0x) + (
+                                           (1 - yita) * vy + 1 / m * (x[0] - x[1])) * ddt * (
+                                           py + vy * ddt - p0y)) / (((px + vx * ddt - p0x) ** 2 + (
+                         py + vy * ddt - p0y) ** 2) ** 0.5) + alfa * (
+                                          ((px + vx * ddt - p0x) ** 2 + (py + vy * ddt - p0y) ** 2) ** 0.5 - r0)})
 
         return cons
 
@@ -351,7 +356,10 @@ class CoverageWorld(World):
                     da_tmp = np.linalg.norm(tmp_pos[id] - tmp_pos[b])
                     if da_tmp < c + 0.1:
                         # if da_tmp < 0.3:
-                        argsr = (1, 0.1, 1, tmp_pos[id][0], tmp_pos[id][1], p_velx[id][0][0], p_velx[id][0][1], tmp_pos[b][0], tmp_pos[b][1], 0.1, 0.25)  # p0x=碰撞智能体x, p0y=碰撞智能体y, r0=0.05
+                        argsr = (
+                            1, 0.1, 1, tmp_pos[id][0], tmp_pos[id][1], p_velx[id][0][0], p_velx[id][0][1],
+                            tmp_pos[b][0],
+                            tmp_pos[b][1], 0.1, 0.25)  # p0x=碰撞智能体x, p0y=碰撞智能体y, r0=0.05
                         conss.append(self.con(argsr))
             d_tmp = np.linalg.norm(tmp_pos[id] - np.array([0.3, 0.3]))
             if d_tmp < 0.4:
@@ -474,5 +482,3 @@ class CoverageWorld(World):
             else:
                 d = np.abs(y - ymin)
         return d
-
-
