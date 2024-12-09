@@ -129,8 +129,8 @@ def train_function(arg):
                 actions_h, avail_actions_h, actions_h_onehot = [], [], []  # 初始化动作编码
                 # 如果还在收集经验，则随机选择上层动作
                 if idx_episode < conf.pretrain_episodes:
-                    # actions_h = np.random.randint(0, conf.n_actions, conf.n_agents)  # 【1, 0, 1, 1】
-                    actions_h = np.array([1, 1, 1, 1])   # todo 调试使用，后面要改
+                    actions_h = np.random.randint(0, conf.n_actions, conf.n_agents)  # 【1, 0, 1, 1】
+                    # actions_h = np.array([1, 1, 1, 1])   # todo 调试使用，后面要改
                     agent_id = 0
                     for action_h_single in actions_h:
                         action_h_onehot = np.zeros(conf.n_actions)  # [0 0]
@@ -147,7 +147,7 @@ def train_function(arg):
                         # 选择动作
                         action_h_single = high_agents.choose_action(obs_n_h[agent_id], last_actions_h[agent_id],
                                                                     agent_id, conf.avail_action, epsilon)  # 0或者1
-                        action_h_single = 1  # todo 调试使用，后面要改
+                        # action_h_single = 1  # todo 调试使用，后面要改
                         action_h_onehot = np.zeros(conf.n_actions)  # [0 0]
                         action_h_onehot[action_h_single] = 1  # 表示选择动作1 【[0 1]】
                         actions_h.append(action_h_single)  # 记录动作【[1, 0, ....]】
