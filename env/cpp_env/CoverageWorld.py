@@ -202,6 +202,11 @@ class CoverageWorld(World):
                         # poi.energy += (1 - dist / agent.r_cover)  # power随半径线性减少
                         poi.energy += 1
                         agent.get_field.append(poi.field_really)
+                        for grid in self.grid:
+                            if (not grid.done) and (poi in grid.sub_points):
+                                agent.cov_grid.append(grid)
+                                grid.just = True
+
                 if poi.energy >= poi.m_energy:
                     # self.done_poi.append(poi)
                     poi.done = True
@@ -209,7 +214,6 @@ class CoverageWorld(World):
                     for grid in self.grid:
                         if (not grid.done) and (poi in grid.sub_points):
                             grid.done = True
-                            poi.just = True
                     self.get_field_data.append([poi.name, poi.field_really])  # 加入智能体观测到的真实数据的列表
                     num_done += 1
                 poi.color = np.array([0.25 + poi.energy / poi.m_energy * 0.75, 0.25, 0.25])

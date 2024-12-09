@@ -77,8 +77,6 @@ class Agents:
                     break
         return max_episode_len
 
-
-
     def _get_min_episode_len(self, batch):
         min_episode_len = self.episode_limit
         for episode_data in batch:
@@ -100,5 +98,5 @@ class Agents:
         self.policy.learn(batch, max_episode_len, train_step, epsilon)
         if train_step > 0 and train_step % self.conf.save_frequency == 0:
             self.policy.save_model(train_step)
-            print("已保存网络")
+            # print("已保存网络")
 

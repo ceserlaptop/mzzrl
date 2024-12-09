@@ -47,8 +47,6 @@ class Scenario(BaseScenario):
         self.occupy_map = np.zeros((self.env_size, self.env_size))
         self.arglist = arglist
 
-        self.last_field = None
-
     def make_world(self):
         if self.num_obst != 0:
             mask = np.array(
@@ -70,7 +68,7 @@ class Scenario(BaseScenario):
         world.agents = [Agent() for _ in range(self.num_agents)]  # 代表UAV, size为覆盖面积
         world.landmarks = [Landmark() for _ in range(self.num_pois)]
         world.field_strength = [Field_strength() for _ in range(self.num_pois)]
-        world.grid = [Grid() for _ in range(self.grid_size*self.grid_size)]
+        world.grid = [Grid() for _ in range(self.grid_size * self.grid_size)]
         # 定义场强，后期要初始化为真实的场强数据
         # world.field_strength = [50] * int(self.num_pois / 3) + [100] * int(self.num_pois / 3) + [75] * (
         #             self.num_pois - int(self.num_pois / 3) * 2)
@@ -110,8 +108,8 @@ class Scenario(BaseScenario):
 
         pos_grid = calculate_pos(self.grid_size, self.scope)
         pos_grid = pos_grid.T
-        little_l = self.scope/world.env_size
-        grid_l = 1.5*(world.env_size/self.grid_size-1)*little_l
+        little_l = self.scope / world.env_size
+        grid_l = 1.5 * (world.env_size / self.grid_size - 1) * little_l
         for i, grid in enumerate(world.grid):
             grid.name = "grid_%d" % i
             grid.state.p_pos = pos_grid[i]
@@ -158,16 +156,26 @@ class Scenario(BaseScenario):
     def reward(self, agent, world, action_h):
         rew = 0.0
         if action_h == 0:  # 覆盖模式
-            for grid in world.grid:  # 大网格中的目标点
+            for grid in agent.cov_grid:  # 大网格中的目标点
                 if grid.just:  # 新覆盖的大网格
                     grid.just = False  # 只能获取一次奖励
                     rew += self.rew_cover * len(grid.sub_points)
+            agent.cov_grid = []  # 将一次覆盖的grid清0
 
         elif action_h == 1:  # 高场强模式
-            average_field = sum(agent.get_field)/len(agent.get_field)
-            if self.last_field is None:
-                self.last_field = average_field
-            rew = (average_field - self.last_field) * self.rew_field
+            if len(agent.get_field) > 0:
+                average_field = sum(agent.get_field) / len(agent.get_field)
+                agent.get_field = []  # 清空智能体每一步采的场强点
+            else:  # 没有覆盖新的点
+                average_field = agent.last_field
+            if agent.last_field is None:  # 初始的场强，直接给当前值
+                agent.last_field = average_field
+            rew = (average_field - agent.last_field) * self.rew_field
+
+            # if average_field != agent.last_field:
+            #     print(agent.name, average_field, agent.last_field)
+
+            agent.last_field = average_field  # 进行记录
         else:
             print("coverage_0.py中的reward函数报错，无此高层动作，请检查代码")
         # 出界惩罚
@@ -210,7 +218,8 @@ class Scenario(BaseScenario):
                     field[i][1] = field[i][0].field_data  # 给到估计的场强
                     field[i][0] = field[i][0].state.p_pos  # 给到坐标点
                 info_field.append([*field[i][0], field[i][1]])
-        return np.concatenate([agent.state.p_vel] + [agent.state.p_pos] + [[agent.target_id]] + info_agents + info_grid + info_field)
+        return np.concatenate(
+            [agent.state.p_vel] + [agent.state.p_pos] + [[agent.target_id]] + info_agents + info_grid + info_field)
 
     def done(self, agent, world):
         for ag in world.agents:

@@ -16,14 +16,14 @@ def parse_args():
     # environment
     parser.add_argument("--scenario_name", type=str, default="coverage_0", help="name of the scenario script")
     parser.add_argument("--start_time", type=str, default=time_now, help="the time when start the game")
-    parser.add_argument("--max_step", type=int, default=160, help="maximum episode length")
+    parser.add_argument("--max_step", type=int, default=500, help="maximum episode length")
     parser.add_argument("--max_episode", type=int, default=10000, help="maximum episode length")
     parser.add_argument("--num-adversaries", type=int, default=0, help="number of adversaries")
     parser.add_argument("--field_mode", type=str, default="static", help="场强信息的显示形式，static为静态，gradual为动态")
     parser.add_argument("--n_agent", type=int, default=4, help="智能体数量")
     parser.add_argument("--n_skill", type=int, default=2, help="上层技巧的数量")
     parser.add_argument("--n_obs", type=int, default=134, help="观测数据的维度")
-    parser.add_argument("--render_fra", type=int, default=10, help="render的频率")
+    parser.add_argument("--render_fra", type=int, default=1000, help="render的频率")
     parser.add_argument("--render_step_fra", type=int, default=5, help="render时多少步render一次")
 
     # 训练相关参数设置

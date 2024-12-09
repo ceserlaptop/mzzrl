@@ -124,7 +124,9 @@ class MultiAgentEnv(gym.Env):
         for i in range(len(self.agents)):
             reward_agent = self._get_reward(self.agents[i], action_h[i])
             reward_n.append(reward_agent)
+        print(reward_n)
         # reward_n = [self._get_reward(self.agents[0]) * self.n] * self.n
+
         done_n = [self._get_done(self.agents[0])] * self.n
         self.isrest = False
 

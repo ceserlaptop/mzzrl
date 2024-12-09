@@ -129,7 +129,8 @@ def train_function(arg):
                 actions_h, avail_actions_h, actions_h_onehot = [], [], []  # 初始化动作编码
                 # 如果还在收集经验，则随机选择上层动作
                 if idx_episode < conf.pretrain_episodes:
-                    actions_h = np.random.randint(0, conf.n_actions, conf.n_agents)  # 【1, 0, 1, 1】
+                    # actions_h = np.random.randint(0, conf.n_actions, conf.n_agents)  # 【1, 0, 1, 1】
+                    actions_h = np.array([1, 1, 1, 1])   # todo 调试使用，后面要改
                     agent_id = 0
                     for action_h_single in actions_h:
                         action_h_onehot = np.zeros(conf.n_actions)  # [0 0]
@@ -146,6 +147,7 @@ def train_function(arg):
                         # 选择动作
                         action_h_single = high_agents.choose_action(obs_n_h[agent_id], last_actions_h[agent_id],
                                                                     agent_id, conf.avail_action, epsilon)  # 0或者1
+                        action_h_single = 1  # todo 调试使用，后面要改
                         action_h_onehot = np.zeros(conf.n_actions)  # [0 0]
                         action_h_onehot[action_h_single] = 1  # 表示选择动作1 【[0 1]】
                         actions_h.append(action_h_single)  # 记录动作【[1, 0, ....]】
@@ -269,7 +271,7 @@ def train_function(arg):
                     batch_change[itme] = np.array(batch_change[itme])  # 把列表数据转换成数组
                 high_agents.train(batch_change, train_steps_h)
                 train_steps_h += 1
-                print("上层网络当前已训练", train_steps_h, "次")
+                # print("上层网络当前已训练", train_steps_h, "次")
 
         # 最后一个动作
         o.append(obs_n)
@@ -319,12 +321,10 @@ def train_function(arg):
             episode[key] = np.array([episode[key]])  # 把列表全变成数组
 
         buf_high.add(episode)
-        print("当前已运行", idx_episode, "场")
         if idx_episode >= conf.pretrain_episodes and idx_episode % conf.train_frequency == 0:  # 每10场训练一次
             for train_step in range(conf.train_steps):  # 一次训练多少轮
                 # 一个mini_batch有batch_size个数据每个数据中有11类数据，【其中obs:【一场游戏，20个时间步，四个智能体，314位观测(1,20,4,314)】】
                 mini_batch = buf_high.sample(min(len(buf_high), conf.batch_size))
-                # print(mini_batch['o'].shape)
                 batch_change = {'o': [], 'u': [], 's': [], 'r': [], 'o_': [], 's_': [], 'avail_u': [],
                                 'avail_u_': [], 'u_onehot': [], 'padded': [], 'terminated': []}
                 for batch_data in mini_batch:
@@ -335,27 +335,23 @@ def train_function(arg):
                     batch_change[itme] = np.array(batch_change[itme])  # 把列表数据转换成数组
                 high_agents.train(batch_change, train_steps)
                 train_steps += 1
-                print("当前已训练", train_steps, "次")
 
         # 累加这一集的奖励
         reward_period += episode_reward
 
-        if idx_episode > 0 and idx_episode % arg.print_fre == 0:  # 一定间隔尽心打印一次（评估中每训练5次【其实不用】）
-            # print('{:>10s}{:>10s}{:>12s}{:>5s}{:>8s}{:>10s}{:>8s}{:>8s}{:>15s}{:>15s}{:>10s}{:>12s}{:>12s}'.format(
-            #     *(header.strip().split(','))))  # 打印result信息的头header,即每五次打印一次头header
+        if idx_episode > 0 and idx_episode % arg.print_fre == 0:  # 一定间隔尽心打印一次
             end_time = time.time()
-            output = format("Eps: %.1fk, Rew: %.2f, Cov:%.2f "
-                            "time: %.2fs"
+            output = format("Eps: %.1fk, Rew: %.2f, Cov:%.2f, time: %.2fs, 训练次数：%d"
                             % (idx_episode / 1000,
                                float(reward_period / idx_episode),
                                float(np.mean(coverage_rate[-arg.print_fre:])),
-                               end_time - start_time
+                               end_time - start_time, train_steps
                                ))
             print(output)
         if idx_episode >= conf.pretrain_episodes and epsilon > epsilon_end:
             epsilon -= epsilon_step
 
-        if idx_episode > 0 and idx_episode % arg.fre_save_model == 0:  # 如果到了保存间隔，不论胜率是否达标都保存
+        if idx_episode > 0 and idx_episode % arg.fre_save_model == 0:  # 如果到了保存间隔，不论是否达标都保存
             time_now = time.strftime('%m%d_%H%M%S')
             print('=time:{} episode:{} step:{}        save'.format(time_now, idx_episode + 1, idx_step))
             model_file_dir = os.path.join(save_policy_path, '{}_{}_{}'.format(

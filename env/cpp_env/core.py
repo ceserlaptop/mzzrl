@@ -103,6 +103,8 @@ class Agent(Entity):
         # script behavior to execute
         self.action_callback = None
         self.get_field = []
+        self.cov_grid = []
+        self.last_field = None
 
 
 # multi-agent world
