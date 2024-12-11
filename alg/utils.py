@@ -136,30 +136,24 @@ def get_rgb(file_path):
 
 
 def choose_point(agent, world_field_strength):
-    min_distence = [[[None, np.inf], [None, np.inf]], [[None, np.inf], [None, np.inf]], [[None, np.inf], [None, np.inf]], [[None, np.inf], [None, np.inf]]]
+    angel_num = 4
+    point_num = 4
+    min_distence = [[[None, np.inf] for _ in range(point_num)] for _ in range(angel_num)]
     for field in world_field_strength:
         distence = calculate_distance(field.state.p_pos, agent.state.p_pos)
         angel = calculate_angle(field.state.p_pos, agent.state.p_pos)
         index = (angel-(np.pi/4))/(np.pi/2)
         if index < 0:
-            if distence < min_distence[3][0][1]:
-                min_distence[3][0][0] = field
-                min_distence[3][0][1] = distence
-            elif distence < min_distence[3][1][1]:
-                min_distence[3][1][0] = field
-                min_distence[3][1][1] = distence
-            else:
-                pass
+            max_poi = max(min_distence[3], key=lambda x: x[1])
+            if distence < max_poi[1]:
+                min_distence[3].remove(max_poi)
+                min_distence[3].append([field, distence])
         else:
             index = int(index)
-            if distence < min_distence[index][0][1]:
-                min_distence[index][0][0] = field
-                min_distence[index][0][1] = distence
-            elif distence < min_distence[index][1][1]:
-                min_distence[index][1][0] = field
-                min_distence[index][1][1] = distence
-            else:
-                pass
+            max_poi = max(min_distence[index], key=lambda x: x[1])
+            if distence < max_poi[1]:
+                min_distence[index].remove(max_poi)
+                min_distence[index].append([field, distence])
     return min_distence
 
 

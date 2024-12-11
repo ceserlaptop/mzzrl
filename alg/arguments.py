@@ -6,7 +6,7 @@ import time
 import argparse
 import torch
 
-device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+device = torch.device('cuda:1') if torch.cuda.is_available() else torch.device('cpu')
 time_now = time.strftime('%y%m_%d%H%M')
 
 
@@ -44,7 +44,7 @@ def parse_args():
     parser.add_argument("--alpha_threshold", type=float, default=0.5, help="权重系数阈值")
 
     parser.add_argument("--decoder_dataset_train", type=float, default=0.5, help="开始训练编码器的数据集大小")
-    parser.add_argument("--print_fre", type=int, default=500, help="打印的场数间隔")
+    parser.add_argument("--print_fre", type=int, default=100, help="打印的场数间隔")
     parser.add_argument("--evaluate_episode_num", type=int, default=10, help="一次评估的场数")
     parser.add_argument("--evaluate_episode_fre", type=int, default=500, help="评估的频率，搁多少场评估一次")
     parser.add_argument("--save_cov_rate_threshold", type=int, default=0.9, help="保存模型的阈值")
@@ -76,8 +76,8 @@ def parse_args():
     parser.add_argument("--lr_qmix", type=float, default=0.002, help="learning rate for adam optimizer")
     parser.add_argument("--lr_ppo", type=float, default=0.002, help="learning rate for adam optimizer")
     parser.add_argument("--gamma", type=float, default=0.95, help="discount factor")
-    parser.add_argument("--batch_size", type=int, default=2, help="number of episodes to optimize at the same time")
-    parser.add_argument("--buffer_size", type=int, default=10, help="number of data stored in the memory")
+    parser.add_argument("--batch_size", type=int, default=32, help="number of episodes to optimize at the same time")
+    parser.add_argument("--buffer_size", type=int, default=2000, help="number of data stored in the memory")
     parser.add_argument("--num_units_1", type=int, default=128, help="number of units in the mlp")
     parser.add_argument("--num_units_2", type=int, default=64, help="number of units in the mlp")
     parser.add_argument("--num_units_openai", type=int, default=128, help="number of units in the mlp")

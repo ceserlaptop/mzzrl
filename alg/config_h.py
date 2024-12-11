@@ -20,7 +20,7 @@ class Config:
         self.render_step_fra = 5  # render的步频率，在一个render场中多少步render一次
         self.high_net_step = 20  # 上层网络的步数间隔
         self.pretrain_episodes = 10  # 开始进行训练的场数
-        self.steps_per_train = 10  # 下层网络搁多少个step_h训练一次
+        self.steps_per_train = 100  # 下层网络搁多少个step_h训练一次
         self.epsilon_start = 0.5
         self.epsilon_end = 0.05
         self.epsilon_div = 1e3  # 贪婪系数下降场数

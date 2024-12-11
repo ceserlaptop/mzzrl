@@ -4,16 +4,16 @@ from alg.qmix.policy import QMIX
 
 
 class Agents:
-    def __init__(self, conf):
+    def __init__(self, obs_shape, conf):
         self.conf = conf
         self.device = conf.device
         self.n_actions = conf.n_actions
         self.n_agents = conf.n_agents
-        self.state_shape = conf.state_shape
-        self.obs_shape = conf.obs_shape
+        self.obs_shape = obs_shape
+        self.state_shape = obs_shape * self.n_agents
         self.episode_limit = conf.episode_limit
 
-        self.policy = QMIX(conf)
+        self.policy = QMIX(obs_shape, conf)
 
         print("QMIX Agents inited!")
 

@@ -124,7 +124,7 @@ class MultiAgentEnv(gym.Env):
         for i in range(len(self.agents)):
             reward_agent = self._get_reward(self.agents[i], action_h[i])
             reward_n.append(reward_agent)
-        print(reward_n)
+        # print(reward_n, action_h)
         # reward_n = [self._get_reward(self.agents[0]) * self.n] * self.n
 
         done_n = [self._get_done(self.agents[0])] * self.n
@@ -304,8 +304,8 @@ class MultiAgentEnv(gym.Env):
 
         return results
 
-    def random_actions(self):
-        action_n = [np.random.rand(5) for _ in range(4)]
+    def random_actions(self, n_agents, action_shape):
+        action_n = [np.random.rand(action_shape) for _ in range(n_agents)]
         return action_n
 
     # create receptor field locations in local coordinate frame

@@ -2,8 +2,8 @@
 # 考虑连通保持的覆盖场景
 
 import numpy as np
+import random
 import pandas as pd
-
 from env.cpp_env.CoverageWorld import CoverageWorld
 from env.cpp_env.core import Agent, Landmark, Field_strength, Grid
 from env.cpp_env.scenario import BaseScenario
@@ -26,7 +26,14 @@ class Scenario(BaseScenario):
         # self.done_poi = []  # 用来存储已经完成覆盖的目标点
         # self.pos_agents = [[[x, x], [x, x], [x, x], [x, x]] for x in [0.9]][0]
         # 智能体初始位置
-        self.agent_pos = np.array([[-0.5, -0.5], [-0.1, -0.5], [-0.5, -0.1], [-0.1, -0.1]])
+        # 定义范围
+        self.x_range = [-1, 1]
+        self.y_range = [-1, 1]
+
+        # 在范围内随机生成四个坐标点
+        self.agent_pos = np.array([[random.uniform(self.x_range[0], self.x_range[1]), random.uniform(self.y_range[0], self.y_range[1])]
+                                   for _ in range(self.num_agents)])
+        # self.agent_pos = np.array([[-0.5, -0.5], [-0.1, -0.5], [-0.5, -0.1], [-0.1, -0.1]])
         self.agent_pos_tmp = self.agent_pos
         self.mask_x = np.array([])  # 保存障碍物栅格x坐标
         self.mask_y = np.array([])  # 保存障碍物栅格y坐标
@@ -34,12 +41,12 @@ class Scenario(BaseScenario):
         self.r_comm = r_comm
         self.m_energy = 1.0
 
-        self.rew_cover = 20.0
-        self.rew_field = 5.0  # 场强上升一个单位的奖励
+        self.rew_cover = 80.0
+        self.rew_field = 0.1  # 场强上升一个单位的奖励
 
         self.rew_done = 1500.0
-        self.rew_out = -100.0
-        self.rew_collision = -20.0
+        self.rew_out = -200.0
+        self.rew_collision = -2.0
         self.rew_unconnect = -10.0
         self.num_trainsp = 100000
         self.comm_r_scale = comm_r_scale  # r_comm * comm_force_scale = 计算聚合力时的通信半径
@@ -125,6 +132,9 @@ class Scenario(BaseScenario):
 
     def reset_world(self, world):
         # world.done_poi = []
+        self.agent_pos = np.array([[random.uniform(self.x_range[0], self.x_range[1]), random.uniform(self.y_range[0], self.y_range[1])]
+                                   for _ in range(self.num_agents)])
+        # print(self.agent_pos)
         for i, agent in enumerate(world.agents):
             # agent.color = np.array([0.05, 0.15, 0.05])
             agent.color = np.array([0.7, 0.7, 0.7])
@@ -160,21 +170,23 @@ class Scenario(BaseScenario):
                 if grid.just:  # 新覆盖的大网格
                     grid.just = False  # 只能获取一次奖励
                     rew += self.rew_cover * len(grid.sub_points)
+                    # print(agent.name,"get reward 0:",rew)
             agent.cov_grid = []  # 将一次覆盖的grid清0
 
         elif action_h == 1:  # 高场强模式
+
             if len(agent.get_field) > 0:
-                average_field = sum(agent.get_field) / len(agent.get_field)
-                agent.get_field = []  # 清空智能体每一步采的场强点
+                average_field = agent.get_field[0]
+                agent.get_field = [None, np.inf]  # 清空智能体每一步采的场强点
             else:  # 没有覆盖新的点
                 average_field = agent.last_field
+            # if average_field is None:  # 初始的场强，直接给当前值
+            #     average_field = 0
             if agent.last_field is None:  # 初始的场强，直接给当前值
                 agent.last_field = average_field
-            rew = (average_field - agent.last_field) * self.rew_field
-
+            rew += (average_field - agent.last_field) * self.rew_field
             # if average_field != agent.last_field:
-            #     print(agent.name, average_field, agent.last_field)
-
+                # print(agent.name, "get reward 1:" , rew)
             agent.last_field = average_field  # 进行记录
         else:
             print("coverage_0.py中的reward函数报错，无此高层动作，请检查代码")
@@ -183,13 +195,14 @@ class Scenario(BaseScenario):
         rew += np.sum(abs_pos[abs_pos > 1] - 1) * self.rew_out  # 对出界部分的长度进行计算
         if (abs_pos > 1.2).any():  # 出界太多，则直接给惩罚
             rew += self.rew_out
+        # print(agent.name, "get reward out:", rew)
         # 相互碰撞惩罚
         # for i, ag in enumerate(world.agents):
-        for other_agent in world.agents:
-            if other_agent.name != agent.name:
-                dist = np.linalg.norm(agent.state.p_pos - other_agent.state.p_pos)
-                if dist < 0.2:
-                    rew += self.rew_collision
+        # for other_agent in world.agents:
+        #     if other_agent.name != agent.name:
+        #         dist = np.linalg.norm(agent.state.p_pos - other_agent.state.p_pos)
+        #         if dist < 0.2:
+        #             rew += self.rew_collision
         return rew
 
     def observation(self, agent, world):

@@ -9,6 +9,7 @@ class CoverageWorld(World):
     def __init__(self, comm_r_scale=0.9, comm_force_scale=0.0):
         super(CoverageWorld, self).__init__()
         self.coverage_rate = 0.0  # 每次step后重新计算
+        self.grid_cov_rate = 0.0  # 每次step后重新计算
         self.connect = False  # 当前是否强连通
         self.dist_mat = np.zeros([4, 4])  # agents之间的距离矩阵, 对角线为1e5
         # self.adj_mat = np.zeros([4, 4])  # 标准r_comm下的邻接矩阵, 对角线为0
@@ -191,17 +192,28 @@ class CoverageWorld(World):
         return True if (sum(connect_mat) > 0).all() else False
 
     def update_energy(self):
-        num_done = 0
+        num_poi_done = 0
+        num_grid_done = 0
+        for grid in self.grid:
+            if grid.done:
+                num_grid_done += 1
+        for agent in self.agents:
+            for poi in self.landmarks:
+                dist = np.linalg.norm(poi.state.p_pos - agent.state.p_pos)
+                if dist < agent.get_field[1]:
+                    agent.get_field[1] = dist
+                    agent.get_field[0] = poi.field_really
+
         for poi in self.landmarks:
             if poi.done:
-                num_done += 1
+                num_poi_done += 1
             else:
                 for agent in self.agents:
                     dist = np.linalg.norm(poi.state.p_pos - agent.state.p_pos)
                     if dist <= agent.r_cover:
                         # poi.energy += (1 - dist / agent.r_cover)  # power随半径线性减少
                         poi.energy += 1
-                        agent.get_field.append(poi.field_really)
+                        # agent.get_field.append(poi.field_really)
                         for grid in self.grid:
                             if (not grid.done) and (poi in grid.sub_points):
                                 agent.cov_grid.append(grid)
@@ -214,10 +226,13 @@ class CoverageWorld(World):
                     for grid in self.grid:
                         if (not grid.done) and (poi in grid.sub_points):
                             grid.done = True
+                            num_grid_done+=1
                     self.get_field_data.append([poi.name, poi.field_really])  # 加入智能体观测到的真实数据的列表
-                    num_done += 1
+                    num_poi_done += 1
                 poi.color = np.array([0.25 + poi.energy / poi.m_energy * 0.75, 0.25, 0.25])
-        self.coverage_rate = num_done / len(self.landmarks)
+
+        self.coverage_rate = num_poi_done / len(self.landmarks)
+        self.grid_cov_rate = num_grid_done / len(self.grid)
 
     def field_change(self, mode):
         data_path = "gradual_elliptical_field_strength.csv"  # 场强数据文件路径

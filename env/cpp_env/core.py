@@ -102,7 +102,7 @@ class Agent(Entity):
         self.action = Action()
         # script behavior to execute
         self.action_callback = None
-        self.get_field = []
+        self.get_field = [None, np.inf]
         self.cov_grid = []
         self.last_field = None
 

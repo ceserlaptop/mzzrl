@@ -4,13 +4,13 @@ from alg.qmix.networks import RNN, QMixNet
 
 
 class QMIX:
-    def __init__(self, conf):
+    def __init__(self, obs_shape, conf):
         self.conf = conf
         self.device = self.conf.device
         self.n_actions = self.conf.n_actions
         self.n_agents = self.conf.n_agents
-        self.state_shape = self.conf.state_shape
-        self.obs_shape = self.conf.obs_shape
+        self.obs_shape = obs_shape
+        self.state_shape = obs_shape * self.n_agents
         input_shape = self.obs_shape
 
         # print(self.device, self.n_actions, self.n_agents, self.state_shape, self.obs_shape, input_shape)
