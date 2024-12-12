@@ -253,7 +253,8 @@ class MultiAgentEnv(gym.Env):
                     geom = rendering.make_circle(entity.size)
                     xform = rendering.Transform()
                 else:
-                    entity.view_vertices = get_square_vertices(entity.state.p_pos, 0.2)  # 根据每一个目标点的位置创建一个正方形
+                    entity.view_vertices = get_square_vertices(entity.state.p_pos, self.world.scope/self.world.env_size
+                                                               * 2)  # 根据每一个目标点的位置创建一个正方形
                     geom = rendering.make_polygon(entity.view_vertices, filled=True)
                     xform = rendering.Transform()
                 geom.add_attr(xform)

@@ -10,20 +10,17 @@ class Config:
         # train setting
         self.last_action = True  # 使用最新动作选择动作
         self.reuse_network = True  # 对所有智能体使用同一个网络
-        # self.n_epochs = 100000  # 20000
         self.evaluate_epoch = 20  # 20
         self.evaluate_per_epoch = 100  # 100
         self.batch_size = 16  # 32
-        self.buffer_size = int(5e3)
+        self.buffer_size = int(5e4)
         self.save_frequency = 1000  # 训练多少次保存一次
-        self.train_steps = 10  # 每次训练多少轮
+        self.train_steps = 5  # 每次训练多少轮
         self.train_frequency = 5  # 多少场训练一次,上层训练频率
-        self.episode_limit = 100  # 每个episode的最大步数，max_step
+
         self.max_episode = 10000  # 最大场数
-
-        self.pretrain_episodes = 100  # 开始训练的场数
+        self.pretrain_episodes = 500  # 开始训练的场数
         self.fre_save_model = 500  # 上层网络模型保存的频率
-
         self.max_step = 140  # 一场最大步数
         self.high_net_step = 20  # 上层多少步算一步,注意self.max_step要整除self.high_net_step
 
@@ -50,7 +47,8 @@ class Config:
         self.difficulty = '2'
         self.game_version = 'latest'
         self.replay_dir = './replay_buffer/'
-        self.field_mode = "gradual"  # 场强信息的显示形式，static为静态，gradual为动态
+        self.field_mode = "static"  # 场强信息的显示形式，static为静态，gradual为动态
+        self.env_size = 30
 
         if self.cuda:
             self.device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")

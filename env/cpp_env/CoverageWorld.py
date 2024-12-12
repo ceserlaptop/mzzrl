@@ -197,20 +197,24 @@ class CoverageWorld(World):
         for grid in self.grid:
             if grid.done:
                 num_grid_done += 1
-        for agent in self.agents:
-            for poi in self.landmarks:
-                dist = np.linalg.norm(poi.state.p_pos - agent.state.p_pos)
-                if dist < agent.get_field[1]:
-                    agent.get_field[1] = dist
-                    agent.get_field[0] = poi.field_really
+
+        # 观测那部分写过了，所以这里可以注释
+        # for agent in self.agents:
+        #     for poi in self.landmarks:
+        #         dist = np.linalg.norm(poi.state.p_pos - agent.state.p_pos)
+        #         if dist < agent.get_field[1]:
+        #             agent.get_field[1] = dist
+        #             agent.get_field[0] = poi
 
         for poi in self.landmarks:
             if poi.done:
                 num_poi_done += 1
             else:
                 for agent in self.agents:
-                    dist = np.linalg.norm(poi.state.p_pos - agent.state.p_pos)
-                    if dist <= agent.r_cover:
+                    # dist = np.linalg.norm(poi.state.p_pos - agent.state.p_pos)
+                    # if dist <= agent.r_cover:
+                    dist = poi.state.p_pos - agent.state.p_pos
+                    if max(abs(dist)) < agent.r_cover:
                         # poi.energy += (1 - dist / agent.r_cover)  # power随半径线性减少
                         poi.energy += 1
                         # agent.get_field.append(poi.field_really)
@@ -226,7 +230,7 @@ class CoverageWorld(World):
                     for grid in self.grid:
                         if (not grid.done) and (poi in grid.sub_points):
                             grid.done = True
-                            num_grid_done+=1
+                            num_grid_done += 1
                     self.get_field_data.append([poi.name, poi.field_really])  # 加入智能体观测到的真实数据的列表
                     num_poi_done += 1
                 poi.color = np.array([0.25 + poi.energy / poi.m_energy * 0.75, 0.25, 0.25])
@@ -235,12 +239,11 @@ class CoverageWorld(World):
         self.grid_cov_rate = num_grid_done / len(self.grid)
 
     def field_change(self, mode):
-        data_path = "gradual_elliptical_field_strength.csv"  # 场强数据文件路径
+        data_path = "field_strength_data.csv"  # 场强数据文件路径
         data = pd.read_csv(data_path)
-        data_values = data.values.reshape(100)
+        data_values = data.values.reshape(self.env_size**2)
         rgb_data = get_rgb(data_path)  # 读取并转为 NumPy 数组
-        i = 0
-        for field in self.field_strength:
+        for i, field in enumerate(self.field_strength):
             field.field_data = data_values[i]
             field_name_num = (field.name.split("_")[-1])  # 这里得到的是字符串型的数据
             if mode == "static":

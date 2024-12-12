@@ -11,7 +11,7 @@ class Agents:
         self.n_agents = conf.n_agents
         self.obs_shape = obs_shape
         self.state_shape = obs_shape * self.n_agents
-        self.episode_limit = conf.episode_limit
+        self.episode_limit = conf.max_episode
 
         self.policy = QMIX(obs_shape, conf)
 

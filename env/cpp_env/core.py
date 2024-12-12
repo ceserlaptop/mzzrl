@@ -124,12 +124,13 @@ class World(object):
         self.dim_color = 3
         # simulation timestep
         self.dt = 0.1
-        # physical damping
+        # physical damping  物理阻尼
         self.damping = 0.25
         # contact response parameters
         self.contact_force = 1e+2
         self.contact_margin = 1e-3
         self.env_size = None
+        self.scope = None
 
     # return all entities in the world
     @property

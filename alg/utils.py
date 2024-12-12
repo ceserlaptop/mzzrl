@@ -142,7 +142,7 @@ def choose_point(agent, world_field_strength):
     for field in world_field_strength:
         distence = calculate_distance(field.state.p_pos, agent.state.p_pos)
         angel = calculate_angle(field.state.p_pos, agent.state.p_pos)
-        index = (angel-(np.pi/4))/(np.pi/2)
+        index = (angel - (np.pi / 4)) / (np.pi / 2)
         if index < 0:
             max_poi = max(min_distence[3], key=lambda x: x[1])
             if distence < max_poi[1]:
@@ -174,12 +174,12 @@ def calculate_angle(point1, point2):
 
 
 def calculate_pos(env_size, scope):
-    border_distance = scope/env_size
-    x = np.arange(-scope+border_distance, scope, 2*border_distance)
-    y = np.arange(-scope+border_distance, scope, 2*border_distance)
+    border_distance = scope / env_size
+    x = np.arange(-scope + border_distance, scope, 2 * border_distance)
+    y = np.arange(-scope + border_distance, scope, 2 * border_distance)
     X, Y = np.meshgrid(x, y)
-    x = X.reshape(env_size*env_size, )
-    y = Y.reshape(env_size*env_size, )
+    x = X.reshape(env_size * env_size, )
+    y = Y.reshape(env_size * env_size, )
     pos_pois = np.array([x, y])
     return pos_pois
 
@@ -201,6 +201,40 @@ def create_dir(scenario_name):
         if not os.path.exists(save_path):
             os.mkdir(save_path)
     return save_paths[0], save_paths[1]
+
+
+def generate_field_strength(size, center_x, center_y, max_strength, radius):
+    """
+    生成一个具有单个高场强区域的场强数据。
+
+    Args:
+      size: 场强数据的边长（例如 30 表示 30x30）。
+      center_x: 高场强区域中心的 x 坐标。
+      center_y: 高场强区域中心的 y 坐标。
+      max_strength: 高场强区域中心的最大场强值。
+      radius: 高场强区域的影响半径。
+
+    Returns:
+    一个 size x size 的 NumPy 数组，表示场强数据。
+    """
+    field = np.zeros((size, size))
+    for i in range(size):
+        for j in range(size):
+            distance = np.sqrt((i - center_x) ** 2 + (j - center_y) ** 2)
+            if distance <= radius:
+                field[i, j] = max_strength * (1 - distance / radius)
+    return field
+
+
+def read_txt(filepath):
+    """读取整个文件内容并返回字符串。"""
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:  # 使用 'utf-8' 编码打开文件，处理中文
+            content = f.read()
+            return content
+    except FileNotFoundError:
+        print(f"文件 '{filepath}' 未找到.")
+        return None
 
 
 class Vector2D:  # pylint: disable=missing-function-docstring
